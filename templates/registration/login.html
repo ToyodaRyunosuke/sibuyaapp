@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ログイン　ー　渋谷イベントアプリ</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header, footer {
+            background-color: #333;
+            color:white;
+            text-align: center;
+            padding: 10px;
+        }
+        nacv ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ログイン</h1>
+        <nav>
+            <url>
+                <li><a href="{% url 'home' %}">ホーム</a></li>
+                <li><a href="{% url 'my_page' %}">マイページ</a></li>
+                <li><a href="{% url 'search' %}q=">イベント検索</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'logout' %}">ログアウト</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">ログイン</a></li>
+                {% endif %}
+            </url>
+        </nav>
+    </header>
+
+    <div class="login-container">
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">ログイン</button>
+        </form>
+    </div>
+
+    <footer>
+        <p>アカウントを持っていない場合は、<a href="{% url 'signup' %}">こちら</a>から登録してください</p>
+        <p>&copy; 2024 渋谷イベントアプリ</p>
+    </footer>
+</body>
+</html>

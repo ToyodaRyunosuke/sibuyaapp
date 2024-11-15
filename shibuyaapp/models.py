@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
-    BaseUseManager,
+    BaseUserManager,
     PermissionsMixin,
 )
 
 
-class UserManager(BaseUseManager):
+class UserManager(BaseUserManager):
     def create_user(self,email,password=None,**extra_fields):
         if not email:
             raise ValueError("The Email filed must be set")
@@ -28,24 +28,24 @@ class UserManager(BaseUseManager):
         return self.create_user(email, password, **extra_fields)
 
 
-    class User(AbstractBaseUser, PermissionsMixin):
-        email = models.EmailField(unique=True)
-        name = models.CharField(max_length=100)
-        is_active = models.BooleanField(default=True)
-        is_staff = models.BooleanField(default=False)
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
 
-        objects = UserManager()
+    objects = UserManager()
 
-        USERNAME_FIELD = "email"
-        REQUIRED_FIELDS = ["name"]
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["name"]
 
-        def _str_(self):
-            return self.email
+    def _str_(self):
+        return self.email
 
 
-    class Event(models.Model):
+class Event(models.Model):
         title = models.CharField(max_length=100)
-        description = models.TexField()
+        description = models.TextField()
         date = models.DateField()
         location = models.CharField(max_length=100)
 
@@ -53,26 +53,26 @@ class UserManager(BaseUseManager):
             return self.title
         
 
-    class Point(models.Model):
-        user = models.ForeignKey(User, on_dalete=models.CASCADE)
+class Point(models.Model):
+        user = models.ForeignKey(User, on_delete=models.CASCADE)
         event = models.ForeignKey(
-            Event, on_dalete=models.CASCADE, null=True, blank=True
+            Event, on_delete=models.CASCADE, null=True, blank=True
         )
         event_title = models.CharField(
             max_length=255, null=True, blank=True
         )
         points = models.IntegerField(default=0)
-        data_added = models.DataTimeField(auto_now_add=True)
+        data_added = models.DateTimeField(auto_now_add=True)
         is_used = models.BooleanField(default=False)
 
         def _str_(self):
             return f"{self.user.name} - {self.points}ポイント"
         
 
-    class participation(models.Model):
-        user = models.ForeignKey(User, on_dalete=models.CASCADE)
-        event = models.ForeignKey(Event, on_dalete=models.CASCADE)
-        data_joined = models.DataField(auto_now_add==True)
+class participation(models.Model):
+        user = models.ForeignKey(User, on_delete=models.CASCADE)
+        event = models.ForeignKey(Event, on_delete=models.CASCADE)
+        date_joined = models.DateField(auto_now_add=True)
 
         def _str_(self):
             return f"{self.user.email} joined {self.event.title}"
