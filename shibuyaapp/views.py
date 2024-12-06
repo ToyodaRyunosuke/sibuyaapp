@@ -5,7 +5,8 @@ from django.contrib.auth import login
 from .forms import CustomUserCreationForm
 import requests
 from selenium import webdriver
-from selenium.webdriver.chrome import Service
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChoromeDriveManager
 from bs4 import BeautifulSoup
 import time
@@ -17,6 +18,13 @@ from django.untils import timezone
 from django.http import HttpResponseBadRequest
 from urllib.parse import unquote
 from django.core.paginator import Paginator
+
+
+service = Service('/path/to/chromedriver')
+
+options = Options()
+
+driver = webdriver.Chrome(service=service, options=options)
 
 
 def event_detail_view(request, event_id):
@@ -56,7 +64,7 @@ def search_view(request):
         try:
             event_data = json.loads(script.string.strip())
             if isinstance(event_data, list):
-                for event in event_detail:
+                for event in event_data:
                     title = event.get("name", "タイトル不明")
                     start_data = event.get("startData", "日付不明")
                     end_data = event.get("endData", "日付不明")
@@ -92,30 +100,30 @@ def search_view(request):
             print(f"Error parsing event: {e}")
 
     
-    all_events = list(events) + scraped_events
+        all_events = list(events) + scraped_events
 
 
-    no_results_message = "" 
-    if not all_events:
-        if query and month_query:
-            no_results_message = "該当のイベントはありません。若しくは終了しました。"
-        elif month_query:
-            no_results_message = "該当月のイベントはありません。若しくは終了しました。"
-        elif query:
-            no_results_message = "該当のイベントはありません。若しくは終了しました。"
+        no_results_message = "" 
+        if not all_events:
+            if query and month_query:
+                no_results_message = "該当のイベントはありません。若しくは終了しました。"
+            elif month_query:
+                no_results_message = "該当月のイベントはありません。若しくは終了しました。"
+            elif query:
+                no_results_message = "該当のイベントはありません。若しくは終了しました。"
 
     
-    return render(
-            request,
-            "search.html",
-            {
-                "events": all_events,
-                "query": query,
-                "month_query": month_query,
-                "months": list(range(1,13)),
-                "no_results_massage": no_results_massage,
-            },
-        )
+        return render(
+                request,
+                "search.html",
+                {
+                    "events": all_events,
+                    "query": query,
+                    "month_query": month_query,
+                    "months": list(range(1,13)),
+                    "no_results_massage": no_results_message,
+                },
+            )
 
 def signup_view(request):
         if request.methood == "POST":
@@ -155,12 +163,12 @@ def participate_in_event_with_points(request, event_id):
         for point in points:
             point.is_used =True
             point.save()
-        participate.objects.create(user=request.user, event=event)
+        participation.objects.create(user=request.user, event=Event)
         massage = "5000ポイントを使用してイベントに無料で参加しました！"
     else:
         massage = f"ポイントが不足しています。現在のポイント: {total_points}pt"
 
-    return render (request, "event_detail.html", {"event": event, "massage": massage})
+    return render (request, "event_detail.html", {"event": Event, "massage": massage})
 
 
 @login_required
@@ -184,10 +192,10 @@ def participate_in_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
 
-    if participate.objects.filter(user=request.user, event=event).exists():
+    if participation.objects.filter(user=request.user, event=event).exists():
         massage = "既にこのイベントに参加済みです。"
     else:
-        participate.objects.create(user=request.user, event=event)
+        participation.objects.create(user=request.user, event=event)
         Point.objects.create(user=request.user, event=event, points=50)
         massage = "イベントに参加しました！50ポイント獲得！"
 
@@ -211,7 +219,7 @@ def events_view(request):
     print(len(event_list))
 
     for event in event_list:
-        titile = event.find("h3").get_text() if event.find("h3") else "タイトル不明"
+        title = event.find("h3").get_text() if event.find("h3") else "タイトル不明"
         data = (
             event.find("span", class_="data").get_text()
             if event.find("span", class_="data")
@@ -270,7 +278,7 @@ def scrape_events():
 
             if isinstance(event_data,list):
                 for event in event_data:
-                    titile = event.get("name", "タイトル不明")    
+                    title = event.get("name", "タイトル不明")    
                     start_data = event.get("startDate", "日付不明")
                     end_data = event.get("endDate", "日付不明")
                     image = event.get("image", "画像なし")
